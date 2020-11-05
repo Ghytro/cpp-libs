@@ -9,3 +9,6 @@ This is a class for matrices. The class includes such basic operations as matric
 
 ## SegmentTree.h
 This is a class for a data structure known as segment tree. I didn't found the realisation for segment tree in STL, so decided to create it by myself.
+
+## Graph++
+This is a library which can help working with graphs. For now the class created in this library is only for containing graphs and finding shortest path between the vertexes, but for now I'm working on more functionality of this class.
