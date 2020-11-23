@@ -15,18 +15,21 @@
 #  endif
 #endif
 
+#include <iostream>
 #include <vector>
+#include <initializer_list>
 template<class T>
 class Matrix
 {
     public:
         Matrix(size_t rows, size_t cols);
-        Matrix(size_t rows, size_t cols, T** matr);
-        Matrix(std::vector<std::vector<T>> matr);
+        Matrix(T** matr, size_t rows, size_t cols);
+        Matrix(const std::vector<std::vector<T>>& matr);
         Matrix(const Matrix<T>& matr);
         ~Matrix();
 
         Matrix& operator =(const Matrix& right);
+        Matrix& operator =(const std::vector<std::vector<T>> &right);
 
         std::vector<T>& operator [](const int index);
 
@@ -81,28 +84,23 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
 }
 
 template<class T>
-Matrix<T>::Matrix(size_t rows, size_t cols, T** matr)
+Matrix<T>::Matrix(T** matr, size_t rows, size_t cols)
 {
     //here you can assign a matrix from matr
-    Matrix::Matrix(rows, cols);
+    this->matr = std::vector<std::vector<T>>(rows, std::vector<T>(cols));
     for (size_t i = 0; i < this->rows(); ++i)
         for (size_t j = 0; j < this->cols(); ++j)
             this->matr[i][j] = matr[i][j];
 }
 
 template<class T>
-Matrix<T>::Matrix(std::vector<std::vector<T>> matr)
+Matrix<T>::Matrix(const std::vector<std::vector<T>>& matr)
 {
     this->matr = matr;
 }
 
 template<class T>
-Matrix<T>::~Matrix()
-{
-    //dtor
-
-}
-
+Matrix<T>::~Matrix(){}
 /**< Getters for special info about matrix */
 
 template<class T>
@@ -135,6 +133,13 @@ Matrix<T>& Matrix<T>::operator =(const Matrix& right)
 }
 
 template<class T>
+Matrix<T>& Matrix<T>::operator =(const std::vector<std::vector<T>> &right)
+{
+    this->matr = right;
+    return *this;
+}
+
+template<class T>
 Matrix<T> operator +(const Matrix<T>& left, const Matrix<T>& right)
 {
     //insert exception if sizes differ here
@@ -144,7 +149,6 @@ Matrix<T> operator +(const Matrix<T>& left, const Matrix<T>& right)
             r[i][j] = left.matr[i][j] + right.matr[i][j];
     return r;
 }
-
 
 template<class T>
 Matrix<T>& Matrix<T>::operator +=(const Matrix<T>& right)
