@@ -15,9 +15,7 @@
 #  endif
 #endif
 
-#include <iostream>
 #include <vector>
-#include <initializer_list>
 template<class T>
 class Matrix
 {
