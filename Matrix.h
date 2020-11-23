@@ -15,19 +15,20 @@
 #  endif
 #endif
 
+#include <vector>
 template<class T>
 class Matrix
 {
     public:
-        Matrix();
-        Matrix(size_t lines, size_t cols);
-        Matrix(size_t lines, size_t cols, T** matr);
+        Matrix(size_t rows, size_t cols);
+        Matrix(size_t rows, size_t cols, T** matr);
+        Matrix(std::vector<std::vector<T>> matr);
         Matrix(const Matrix<T>& matr);
-        virtual ~Matrix();
+        ~Matrix();
 
         Matrix& operator =(const Matrix& right);
 
-        T* operator [](const int index);
+        std::vector<T>& operator [](const int index);
 
         template<class TT>
         friend Matrix<TT> operator +(const Matrix<TT>& left, const Matrix<TT>& right);
@@ -52,14 +53,12 @@ class Matrix
 
         Matrix& operator *= (const Matrix& right);
 
-        size_t lines();
+        size_t rows();
         size_t cols();
         T det();
 
     protected:
-        T **matr;
-        size_t _lines;
-        size_t _cols;
+        std::vector<std::vector<T>> matr;
 
     private:
         static T _det(Matrix<T> m);
@@ -69,63 +68,59 @@ class Matrix
 /**< C-tors & D-tors */
 
 template<class T>
-Matrix<T>::Matrix(): matr(nullptr), _lines(0), _cols(0) {}
-
-template<class T>
 Matrix<T>::Matrix(const Matrix<T>& matr)
 {
     *this = matr;
 }
 
 template<class T>
-Matrix<T>::Matrix(size_t lines, size_t cols)
+Matrix<T>::Matrix(size_t rows, size_t cols)
 {
     //ctor
-    this->matr = new T*[lines];
-    for (size_t i = 0; i < lines; ++i)
-        this->matr[i] = new T[cols];
-    for (size_t i = 0; i < lines; ++i)
-        for (size_t j = 0; j < cols; ++j)
-            this->matr[i][j] = T(0);
-    this->_lines = lines;
-    this->_cols = cols;
+    this->matr = std::vector<std::vector<T>>(rows, std::vector<T>(cols));
 }
 
 template<class T>
-Matrix<T>::Matrix(size_t lines, size_t cols, T** matr)
+Matrix<T>::Matrix(size_t rows, size_t cols, T** matr)
 {
     //here you can assign a matrix from matr
-    Matrix::Matrix(lines, cols);
-    for (size_t i = 0; i < this->lines(); ++i)
+    Matrix::Matrix(rows, cols);
+    for (size_t i = 0; i < this->rows(); ++i)
         for (size_t j = 0; j < this->cols(); ++j)
             this->matr[i][j] = matr[i][j];
+}
+
+template<class T>
+Matrix<T>::Matrix(std::vector<std::vector<T>> matr)
+{
+    this->matr = matr;
 }
 
 template<class T>
 Matrix<T>::~Matrix()
 {
     //dtor
-    delete matr;
+
 }
 
 /**< Getters for special info about matrix */
 
 template<class T>
-size_t Matrix<T>::lines()
+size_t Matrix<T>::rows()
 {
-    return this->_lines;
+    return this->matr.size();
 }
 
 template<class T>
 size_t Matrix<T>::cols()
 {
-    return this->_cols;
+    return this->matr.front().size();
 }
 
 /**< Operators */
 
 template<class T>
-T* Matrix<T>::operator [](const int index)
+std::vector<T>& Matrix<T>::operator [](const int index)
 {
     return this->matr[index];
 }
@@ -136,8 +131,6 @@ Matrix<T>& Matrix<T>::operator =(const Matrix& right)
     if (this == &right)
         return *this;
     this->matr = right.matr;
-    this->_lines = right._lines;
-    this->_cols = right._cols;
     return *this;
 }
 
@@ -145,8 +138,8 @@ template<class T>
 Matrix<T> operator +(const Matrix<T>& left, const Matrix<T>& right)
 {
     //insert exception if sizes differ here
-    Matrix<T> r(left._lines, left._cols);
-    for (int i = 0; i < left._lines; ++i)
+    Matrix<T> r(left._rows, left._cols);
+    for (int i = 0; i < left._rows; ++i)
         for (int j = 0; j < left._cols; ++j)
             r[i][j] = left.matr[i][j] + right.matr[i][j];
     return r;
@@ -176,10 +169,10 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& right)
 template<class T>
 Matrix<T> operator *(const int& left, const Matrix<T> &right)
 {
-    Matrix<T> r(right._lines, right._cols);
-    for (size_t i = 0; i < right._lines; ++i)
+    Matrix<T> r(right.rows(), right.cols());
+    for (size_t i = 0; i < right.rows(); ++i)
     {
-        for (size_t j = 0; j < right._cols; ++j)
+        for (size_t j = 0; j < right.cols(); ++j)
         {
             r[i][j] = right.matr[i][j] * left;
         }
@@ -190,7 +183,7 @@ Matrix<T> operator *(const int& left, const Matrix<T> &right)
 template<class T>
 Matrix<T> operator *(const Matrix<T> &left, const int& right)
 {
-    Matrix<T> r(left._lines, left._cols);
+    Matrix<T> r(left.rows(), left.cols());
     r = right * left;
     return r;
 }
@@ -206,12 +199,12 @@ template<class T>
 Matrix<T> operator *(const Matrix<T>& left, const Matrix<T> &right)
 {
     //insert exception if impossible to multiply
-    Matrix<T> r(left._lines, right._cols);
-    for (size_t i = 0; i < left._lines; ++i)
+    Matrix<T> r(left.rows(), right.cols());
+    for (size_t i = 0; i < left.rows(); ++i)
     {
-        for (size_t j = 0; j < right._cols; ++j)
+        for (size_t j = 0; j < right.cols(); ++j)
         {
-            for (size_t k = 0; k < left._cols; ++k)
+            for (size_t k = 0; k < left.cols(); ++k)
             {
                 r[i][j] += left.matr[i][k] * right.matr[k][j];
             }
@@ -244,8 +237,8 @@ T Matrix<T>::_det(Matrix<T> m)
     T r = 0;
     for (size_t i = 0; i < m.cols(); ++i)
     {
-        Matrix<T> temp(m.lines() - 1, m.cols() - 1);
-        for (size_t j = 1; j < m.lines(); ++j)
+        Matrix<T> temp(m.rows() - 1, m.cols() - 1);
+        for (size_t j = 1; j < m.rows(); ++j)
         {
             bool x = 0;
             for (size_t k = 0; k < m.cols(); ++k)
