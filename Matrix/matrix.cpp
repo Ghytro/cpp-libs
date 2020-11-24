@@ -53,6 +53,16 @@ std::vector<double> Matrix::operator [](const int index) const
     return this->matr[index];
 }
 
+bool operator ==(const Matrix& left, const Matrix& right)
+{
+    if (left.rows() != right.rows() || left.cols() != right.cols())
+        return false;
+    for (size_t i = 0; i < left.rows(); ++i)
+        if (left[i] != right[i])
+            return false;
+    return true;
+}
+
 Matrix& Matrix::operator =(const Matrix& right)
 {
     if (this == &right)
@@ -74,6 +84,7 @@ Matrix operator +(const Matrix& left, const Matrix& right)
     for (size_t i = 0; i < left.rows(); ++i)
         for (size_t j = 0; j < left.cols(); ++j)
             r[i][j] = left.matr[i][j] + right.matr[i][j];
+    Matrix::_correct_negative_zeros(r);
     return r;
 }
 
@@ -100,6 +111,7 @@ Matrix operator *(const double& left, const Matrix &right)
     for (size_t i = 0; i < right.rows(); ++i)
         for (size_t j = 0; j < right.cols(); ++j)
             r[i][j] = right.matr[i][j] * left;
+    Matrix::_correct_negative_zeros(r);
     return r;
 }
 
@@ -123,15 +135,10 @@ Matrix operator *(const Matrix& left, const Matrix &right)
 
     Matrix r(left.rows(), right.cols());
     for (size_t i = 0; i < left.rows(); ++i)
-    {
         for (size_t j = 0; j < right.cols(); ++j)
-        {
             for (size_t k = 0; k < left.cols(); ++k)
-            {
                 r[i][j] += left.matr[i][k] * right.matr[k][j];
-            }
-        }
-    }
+    Matrix::_correct_negative_zeros(r);
     return r;
 }
 
@@ -190,6 +197,14 @@ double Matrix::_det(Matrix m)
         r += (((i + 1) % 2) ? double(1) : double(-1)) * m[0][i] * _det(temp);
     }
     return r;
+}
+
+void Matrix::_correct_negative_zeros(Matrix &m)
+{
+    for (size_t i = 0; i < m.rows(); ++i)
+        for (size_t j = 0; j < m.cols(); ++j)
+            if (m[i][j] == 0)
+                m[i][j] = 0;
 }
 
 Matrix Matrix::transpose()
