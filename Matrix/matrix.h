@@ -19,6 +19,8 @@ class Matrix
         std::vector<double>& operator [](const int index);
         std::vector<double> operator [](const int index) const;
 
+        friend bool operator ==(const Matrix& left, const Matrix& right);
+
         friend Matrix operator +(const Matrix& left, const Matrix& right);
 
         Matrix& operator +=(const Matrix& right);
@@ -54,6 +56,7 @@ class Matrix
 
     private:
         static double _det(Matrix m);
+        static void _correct_negative_zeros(Matrix& m);
 };
 std::ostream& operator <<(std::ostream& os, const Matrix& matrix);
 
