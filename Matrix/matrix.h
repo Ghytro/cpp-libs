@@ -11,7 +11,7 @@ class Matrix
         Matrix(double** matr, size_t rows, size_t cols);
         Matrix(const std::vector<std::vector<double>>& matr);
         Matrix(const Matrix& matr);
-        ~Matrix();
+        virtual ~Matrix();
 
         Matrix& operator =(const Matrix& right);
         Matrix& operator =(const std::vector<std::vector<double>> &right);
