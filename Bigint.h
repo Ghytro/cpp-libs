@@ -181,7 +181,9 @@ public:
     friend const Bigint operator -(const long long& left, const Bigint& right);
     friend const Bigint operator -(const Bigint& num)
     {
-        return Bigint("-" + num.value);
+        if (num.value()[0] != "-")
+            return Bigint("-" + num.value);
+        return Bigint(num.value.substr(1, num.value.length() - 1));
     }
     friend Bigint& operator -=(Bigint& left, const Bigint& right);
     friend Bigint& operator -=(Bigint& left, const long long& right);
