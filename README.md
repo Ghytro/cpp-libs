@@ -4,7 +4,7 @@ All of these libraries/classes are made by me while learning/practicing C++.
 ## Bigint.h
 This is a class of big integers. We all know, that largest standart integer type in C++ (long long) is not greater than 1e18. So I kinda tried to solve this problem by creating this class.
 
-##integer.h
+## integer.h
 Practically the same as Bigint, but it's much faster than Bigint, 'cause built on bit arithmetic. Also the programmer decides by himself if he needs extra big/small integer (number of stored bits as a template argument), which allows to control integer overflow (useful for generating pseudo-random numbers, for example)
 
 ## Matrix
