@@ -1,7 +1,7 @@
 #ifndef INTEGER_H
 #define INTEGER_H
 
-//#include <iostream>
+#include <iostream>
 #include <istream>
 #include <ostream>
 #include <bitset>
@@ -141,6 +141,42 @@ public:
     template<size_t _len>
     friend inline const Integer<_len> operator %(const long long&, const Integer<_len>&);
 
+
+
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator &(const Integer<_len>&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator &(const Integer<_len>&, const long long&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator &(const long long&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator |(const Integer<_len>&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator |(const Integer<_len>&, const long long&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator |(const long long&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator ^(const Integer<_len>&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator ^(const Integer<_len>&, const long long&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator ^(const long long&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator <<(const Integer<_len>&, const size_t&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator >>(const Integer<_len>&, const size_t&);
+
     Integer operator ++();
     Integer operator ++(int);
     Integer operator --();
@@ -176,7 +212,8 @@ Integer<len>::Integer(long long num)
 
     //setting bits of a number
     this->bits.reset(0);
-    for (size_t i = 0; i < len - 1; ++i)
+    size_t minlen = (len > 64) ? 64 : len;
+    for (size_t i = 0; i < minlen - 1; ++i)
         this->bits[i] = (num & (1 << i)) >> i;
 
     if (sign)
@@ -327,15 +364,32 @@ inline unsigned long long Integer<len>::toULongLong() const
 template<size_t len>
 inline std::string Integer<len>::toString() const
 {
+    Integer<len> temp(this->bits);
+    //std::cout << this->bits;
     std::string ans;
+    while (temp > 0)
+    {
 
+        ans += (temp % 10).toChar() + '0';
+        temp = temp / 10;
+        //std::cout << temp << std::endl;
+    }
+    //std::cout << "here";
+    for (size_t i = 0; i < ans.length() / 2; ++i)
+    {
+        char buf = ans[i];
+        ans[i] = ans[ans.length() - 1 - i];
+        ans[ans.length() - 1 - i] = buf;
+    }
+    //std::cout << "here";
+    return ans;
 }
 
 template <size_t len>
 std::ostream& operator <<(std::ostream& os, const Integer<len>& integer)
 {
 
-    return os << integer.toLongLong();
+    return os << integer.toString();
 }
 
 template<size_t len>
@@ -400,13 +454,16 @@ inline bool operator <(const Integer<len> &a, const Integer<len> &b)
         return Integer<len>(num1) > Integer<len>(num2);
     }
 
-    for (size_t i = len - 1; i != 0; --i)
+    for (size_t i = len - 1; ; --i)
     {
         if (!a.bits.test(i) && b.bits.test(i))
             return true;
 
         if (a.bits.test(i) && !b.bits.test(i))
             return false;
+
+        if (i == 0)
+            break;
     }
     return false;
 }
@@ -440,13 +497,16 @@ inline bool operator >(const Integer<len> &a, const Integer<len> &b)
         return Integer<len>(num1) < Integer<len>(num2);
     }
 
-    for (size_t i = len - 1; i != 0; --i)
+    for (size_t i = len - 1; ; --i)
     {
         if (!a.bits.test(i) && b.bits.test(i))
             return false;
 
         if (a.bits.test(i) && !b.bits.test(i))
             return true;
+
+        if (i == 0)
+            break;
     }
     return false;
 }
@@ -620,6 +680,71 @@ inline const Integer<len> operator %(const long long &a, const Integer<len> &b)
     return Integer<len>(a) % b;
 }
 
+template<size_t len>
+inline const Integer<len> operator &(const Integer<len> &a, const Integer<len> &b)
+{
+    return Integer<len>(a.bits & b.bits);
+}
+
+template<size_t len>
+inline const Integer<len> operator &(const Integer<len> &a, const long long &b)
+{
+    return a & Integer<len>(b);
+}
+
+template<size_t len>
+inline const Integer<len> operator &(const long long &a, const Integer<len> &b)
+{
+    return Integer<len>(a) & b;
+}
+
+template<size_t len>
+inline const Integer<len> operator |(const Integer<len> &a, const Integer<len> &b)
+{
+    return Integer<len>(a.bits | b.bits);
+}
+
+template<size_t len>
+inline const Integer<len> operator |(const Integer<len> &a, const long long &b)
+{
+    return a | Integer<len>(b);
+}
+
+template<size_t len>
+inline const Integer<len> operator |(const long long &a, const Integer<len> &b)
+{
+    return Integer<len>(a) | b;
+}
+
+template<size_t len>
+inline const Integer<len> operator ^(const Integer<len> &a, const Integer<len> &b)
+{
+    return Integer<len>(a.bits ^ b.bits);
+}
+
+template<size_t len>
+inline const Integer<len> operator ^(const Integer<len> &a, const long long &b)
+{
+    return a ^ Integer<len>(b);
+}
+
+template<size_t len>
+inline const Integer<len> operator ^(const long long &a, const Integer<len> &b)
+{
+    return Integer<len>(a) ^ b;
+}
+
+template<size_t len>
+inline const Integer<len> operator <<(const Integer<len> &a, const size_t &b)
+{
+    return Integer<len>(a.bits << b);
+}
+
+template<size_t len>
+inline const Integer<len> operator >>(const Integer<len> &a, const size_t &b)
+{
+    return Integer<len>(a.bits >> b);
+}
 
 template<size_t len>
 Integer<len> Integer<len>::operator ++()
