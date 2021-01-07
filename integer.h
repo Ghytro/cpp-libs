@@ -15,18 +15,20 @@ public:
 
     virtual ~Integer();
 
-    inline char toChar();
-    inline unsigned char toUChar();
-    inline short toShort();
-    inline unsigned short toUShort();
+    inline char toChar() const;
+    inline unsigned char toUChar() const;
+    inline short toShort() const;
+    inline unsigned short toUShort() const;
     inline int toInt() const;
-    inline unsigned int toUInt();
-    inline long toLong();
-    inline unsigned long toULong();
-    inline long long toLongLong();
-    inline unsigned long long toULongLong();
+    inline unsigned int toUInt() const;
+    inline long toLong() const;
+    inline unsigned long toULong() const;
+    inline long long toLongLong() const;
+    inline unsigned long long toULongLong() const;
+    inline std::string toString() const;
 
-    //Integer& operator =(const Integer&);
+    Integer& operator =(const Integer&);
+    Integer& operator =(const long long&);
 
     template<size_t _len>
     friend std::ostream& operator <<(std::ostream&, const Integer<_len>&);
@@ -100,7 +102,7 @@ public:
     friend inline const Integer<_len> operator +(const Integer<_len>&, const long long&);
 
     template<size_t _len>
-    friend inline const Integer<_len> operator+(const long long&, const Integer<_len>&);
+    friend inline const Integer<_len> operator +(const long long&, const Integer<_len>&);
 
     template<size_t _len>
     friend inline const Integer<_len> operator -(const Integer<_len>&, const Integer<_len>&);
@@ -111,6 +113,24 @@ public:
     template<size_t _len>
     friend inline const Integer<_len> operator -(const long long&, const Integer<_len>&);
 
+    template<size_t _len>
+    friend inline const Integer<_len> operator *(const Integer<_len>&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator *(const Integer<_len>&, const long long&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator *(const long long&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator /(const Integer<_len>&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator /(const Integer<_len>&, const long long&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator /(const long long&, const Integer<_len>&);
+
     Integer operator ++();
     Integer operator ++(int);
     Integer operator --();
@@ -119,8 +139,11 @@ public:
 
 private:
     Integer(std::bitset<len>);
+
     std::bitset<len> bits;
+
     static inline std::bitset<len> sum_bitsets(const std::bitset<len>&, const std::bitset<len>&);
+    static inline std::bitset<len> div_bitsets(const std::bitset<len>&, const std::bitset<len>&);
     static inline void to_additional_code(std::bitset<len>&);
 };
 
@@ -168,6 +191,54 @@ Integer<len>::~Integer()
 }
 
 template<size_t len>
+inline char Integer<len>::toChar() const
+{
+    std::bitset<len> temp = this->bits;
+    bool sign = temp.test(len - 1);
+    if (sign)
+        Integer<len>::to_additional_code(temp);
+
+    char ans = 0;
+    for (size_t i = 0; i < len - 1; ++i)
+        ans += temp.test(i) * (1 << i);
+
+    return sign ? -ans : ans;
+}
+
+template<size_t len>
+inline unsigned char Integer<len>::toUChar() const
+{
+    unsigned char ans = 0;
+    for (size_t i = 0; i < len; ++i)
+        ans += this->bits.test(i) * (1 << i);
+    return ans;
+}
+
+template<size_t len>
+inline short Integer<len>::toShort() const
+{
+    std::bitset<len> temp = this->bits;
+    bool sign = temp.test(len - 1);
+    if (sign)
+        Integer<len>::to_additional_code(temp);
+
+    short ans = 0;
+    for (size_t i = 0; i < len - 1; ++i)
+        ans += temp.test(i) * (1 << i);
+
+    return sign ? -ans : ans;
+}
+
+template<size_t len>
+inline unsigned short Integer<len>::toUShort() const
+{
+    unsigned short ans = 0;
+    for (size_t i = 0; i < len; ++i)
+        ans += this->bits.test(i) * (1 << i);
+    return ans;
+}
+
+template<size_t len>
 inline int Integer<len>::toInt() const
 {
     std::bitset<len> temp = this->bits;
@@ -176,16 +247,84 @@ inline int Integer<len>::toInt() const
         Integer<len>::to_additional_code(temp);
 
     int ans = 0;
-    for (size_t i = 0; i < len; ++i)
+    for (size_t i = 0; i < len - 1; ++i)
         ans += temp.test(i) * (1 << i);
 
     return sign ? -ans : ans;
 }
 
+template<size_t len>
+inline unsigned int Integer<len>::toUInt() const
+{
+    unsigned int ans = 0;
+    for (size_t i = 0; i < len; ++i)
+        ans += this->bits.test(i) * (1 << i);
+
+    return ans;
+}
+
+template<size_t len>
+inline long Integer<len>::toLong() const
+{
+    std::bitset<len> temp = this->bits;
+    bool sign = temp.test(len - 1);
+    if (sign)
+        Integer<len>::to_additional_code(temp);
+
+    long ans = 0;
+    for (size_t i = 0; i < len - 1; ++i)
+        ans += temp.test(i) * (1 << i);
+
+    return sign ? -ans : ans;
+}
+
+template<size_t len>
+inline unsigned long Integer<len>::toULong() const
+{
+    unsigned long ans = 0;
+    for (size_t i = 0; i < len; ++i)
+        ans += this->bits.test(i) * (1 << i);
+
+    return ans;
+}
+
+template<size_t len>
+inline long long Integer<len>::toLongLong() const
+{
+    std::bitset<len> temp = this->bits;
+    bool sign = temp.test(len - 1);
+    if (sign)
+        Integer<len>::to_additional_code(temp);
+
+    long long ans = 0;
+    for (size_t i = 0; i < len - 1; ++i)
+        ans += temp.test(i) * (1 << i);
+
+    return sign ? -ans : ans;
+}
+
+template<size_t len>
+inline unsigned long long Integer<len>::toULongLong() const
+{
+    unsigned long long ans = 0;
+    for (size_t i = 0; i < len; ++i)
+        ans += this->bits.test(i) * (1 << i);
+
+    return ans;
+}
+
+template<size_t len>
+inline std::string Integer<len>::toString() const
+{
+    std::string ans;
+
+}
+
 template <size_t len>
 std::ostream& operator <<(std::ostream& os, const Integer<len>& integer)
 {
-    return os << integer.toInt();
+
+    return os << integer.toLongLong();
 }
 
 template<size_t len>
@@ -333,14 +472,21 @@ inline bool operator >=(const long long &a, const Integer<len> &b)
     return !(Integer<len>(a) < b);
 }
 
-/*
+
 template<size_t len>
 Integer<len>& Integer<len>::operator =(const Integer &num)
 {
     this->bits = num.bits;
     return *this;
 }
-*/
+
+template<size_t len>
+Integer<len>& Integer<len>::operator =(const long long &num)
+{
+    *this = Integer<len>(num);
+    return *this;
+}
+
 template<size_t len>
 Integer<len> Integer<len>::operator -() const
 {
@@ -432,7 +578,7 @@ Integer<len> Integer<len>::operator --(int)
 }
 
 template <size_t len>
-std::bitset<len> Integer<len>::sum_bitsets(const std::bitset<len> &b1, const std::bitset<len> &b2)
+inline std::bitset<len> Integer<len>::sum_bitsets(const std::bitset<len> &b1, const std::bitset<len> &b2)
 {
     std::bitset<len> ans;
     bool add = 0;
@@ -442,6 +588,23 @@ std::bitset<len> Integer<len>::sum_bitsets(const std::bitset<len> &b1, const std
         add = ((b1[i] & b2[i]) | (b1[i] & add) | (b2[i] & add));
     }
     return ans;
+}
+
+//TODO
+template<size_t len>
+inline std::bitset<len> Integer<len>::div_bitsets(const std::bitset<len> &b1, const std::bitset<len> &b2)
+{
+    auto substr_bitset = [](const std::bitset<len> &b, const size_t &l, const size_t &r)
+    {
+        std::bitset<len> ans;
+        for (size_t i = l; i <= r; ++i)
+            ans[i - l] = b[i];
+        return ans;
+    };
+    std::bitset<len> ans;
+
+
+
 }
 
 template<size_t len>
