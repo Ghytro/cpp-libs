@@ -182,6 +182,36 @@ public:
     Integer operator --();
     Integer operator --(int);
 
+    Integer operator +=(const Integer<len>&);
+    Integer operator +=(const long long&);
+
+    Integer operator -=(const Integer<len>&);
+    Integer operator -=(const long long&);
+
+    Integer operator *=(const Integer<len>&);
+    Integer operator *=(const long long&);
+
+    Integer operator /=(const Integer<len>&);
+    Integer operator /=(const long long&);
+
+    Integer operator %=(const Integer<len>&);
+    Integer operator %=(const long long&);
+
+    Integer operator &=(const Integer<len>&);
+    Integer operator &=(const long long&);
+
+    Integer operator |=(const Integer<len>&);
+    Integer operator |=(const long long&);
+
+    Integer operator ^=(const Integer<len>&);
+    Integer operator ^=(const long long&);
+
+    Integer operator <<=(const Integer<len>&);
+    Integer operator <<=(const long long&);
+
+    Integer operator >>=(const Integer<len>&);
+    Integer operator >>=(const long long&);
+
 
 private:
     Integer(std::bitset<len>);
