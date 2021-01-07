@@ -394,7 +394,11 @@ inline unsigned long long Integer<len>::toULongLong() const
 template<size_t len>
 inline std::string Integer<len>::toString() const
 {
-    Integer<len> temp(this->bits);
+    std::bitset<len> b = this->bits;
+    bool sign = b.test(len - 1);
+    if (sign)
+        Integer<len>::to_additional_code(b);
+    Integer<len> temp(b);
     //std::cout << this->bits;
     std::string ans;
     while (temp > 0)
@@ -404,6 +408,8 @@ inline std::string Integer<len>::toString() const
         temp = temp / 10;
         //std::cout << temp << std::endl;
     }
+    if (sign)
+        ans += '-';
     //std::cout << "here";
     for (size_t i = 0; i < ans.length() / 2; ++i)
     {
