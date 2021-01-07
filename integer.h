@@ -1,6 +1,7 @@
 #ifndef INTEGER_H
 #define INTEGER_H
 
+//#include <iostream>
 #include <istream>
 #include <ostream>
 #include <bitset>
@@ -131,6 +132,15 @@ public:
     template<size_t _len>
     friend inline const Integer<_len> operator /(const long long&, const Integer<_len>&);
 
+    template<size_t _len>
+    friend inline const Integer<_len> operator %(const Integer<_len>&, const Integer<_len>&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator %(const Integer<_len>&, const long long&);
+
+    template<size_t _len>
+    friend inline const Integer<_len> operator %(const long long&, const Integer<_len>&);
+
     Integer operator ++();
     Integer operator ++(int);
     Integer operator --();
@@ -143,6 +153,7 @@ private:
     std::bitset<len> bits;
 
     static inline std::bitset<len> sum_bitsets(const std::bitset<len>&, const std::bitset<len>&);
+    static inline std::bitset<len> mult_bitsets(const std::bitset<len>&, const std::bitset<len>&);
     static inline std::bitset<len> div_bitsets(const std::bitset<len>&, const std::bitset<len>&);
     static inline void to_additional_code(std::bitset<len>&);
 };
@@ -381,6 +392,14 @@ inline bool operator <(const Integer<len> &a, const Integer<len> &b)
     if (a.bits.test(len - 1) && !b.bits.test(len - 1))
         return true;
 
+    if (a.bits.test(len - 1))
+    {
+        std::bitset<len> num1 = a.bits, num2 = b.bits;
+        Integer<len>::to_additional_code(num1);
+        Integer<len>::to_additional_code(num2);
+        return Integer<len>(num1) > Integer<len>(num2);
+    }
+
     for (size_t i = len - 1; i != 0; --i)
     {
         if (!a.bits.test(i) && b.bits.test(i))
@@ -412,6 +431,14 @@ inline bool operator >(const Integer<len> &a, const Integer<len> &b)
 
     if (a.bits.test(len - 1) && !b.bits.test(len - 1))
         return false;
+
+    if (a.bits.test(len - 1))
+    {
+        std::bitset<len> num1 = a.bits, num2 = b.bits;
+        Integer<len>::to_additional_code(num1);
+        Integer<len>::to_additional_code(num2);
+        return Integer<len>(num1) < Integer<len>(num2);
+    }
 
     for (size_t i = len - 1; i != 0; --i)
     {
@@ -540,6 +567,61 @@ inline const Integer<len> operator -(const long long &a, const Integer<len> &b)
 }
 
 template<size_t len>
+inline const Integer<len> operator *(const Integer<len> &a, const Integer<len> &b)
+{
+    return Integer<len>(Integer<len>::mult_bitsets(a.bits, b.bits));
+}
+
+template<size_t len>
+inline const Integer<len> operator *(const Integer<len> &a, const long long &b)
+{
+    return a * Integer<len>(b);
+}
+
+template<size_t len>
+inline const Integer<len> operator *(const long long &a, const Integer<len> &b)
+{
+    return Integer<len>(a) * b;
+}
+
+template<size_t len>
+inline const Integer<len> operator /(const Integer<len> &a, const Integer<len> &b)
+{
+    return Integer<len>(Integer<len>::div_bitsets(a.bits, b.bits));
+}
+
+template<size_t len>
+inline const Integer<len> operator /(const Integer<len> &a, const long long &b)
+{
+    return a / Integer<len>(b);
+}
+
+template<size_t len>
+inline const Integer<len> operator /(const long long &a, const Integer<len> &b)
+{
+    return Integer<len>(a) / b;
+}
+
+template<size_t len>
+inline const Integer<len> operator %(const Integer<len> &a, const Integer<len> &b)
+{
+    return a - (b * (a / b));
+}
+
+template<size_t len>
+inline const Integer<len> operator %(const Integer<len> &a, const long long &b)
+{
+    return a % Integer<len>(b);
+}
+
+template<size_t len>
+inline const Integer<len> operator %(const long long &a, const Integer<len> &b)
+{
+    return Integer<len>(a) % b;
+}
+
+
+template<size_t len>
 Integer<len> Integer<len>::operator ++()
 {
     for (size_t i = 0; i < len; ++i)
@@ -590,21 +672,110 @@ inline std::bitset<len> Integer<len>::sum_bitsets(const std::bitset<len> &b1, co
     return ans;
 }
 
-//TODO
 template<size_t len>
 inline std::bitset<len> Integer<len>::div_bitsets(const std::bitset<len> &b1, const std::bitset<len> &b2)
 {
-    auto substr_bitset = [](const std::bitset<len> &b, const size_t &l, const size_t &r)
+    if (b1 == std::bitset<len>())
+        return std::bitset<len>();
+
+    auto findSeniorDigit = [](const std::bitset<len>& b)
     {
-        std::bitset<len> ans;
-        for (size_t i = l; i <= r; ++i)
-            ans[i - l] = b[i];
-        return ans;
+        for (size_t i = len - 1; ; --i)
+        {
+            if (b.test(i))
+                return i;
+
+            if (i == 0)
+                break;
+        }
+        return std::string::npos;
     };
+
+    std::bitset<len> a = b1, b = b2;
+
+    bool sign = a.test(len - 1) ^ b.test(len - 1);
+
+    if (a.test(len - 1))
+        Integer<len>::to_additional_code(a);
+
+    if (b.test(len - 1))
+        Integer<len>::to_additional_code(b);
+
+    if (Integer<len>(a) < Integer<len>(b))
+        return std::bitset<len>();
+
+    const size_t d1 = findSeniorDigit(a), d2 = findSeniorDigit(b);
+
+    if (d1 < d2)
+        return std::bitset<len>();
+
+    std::bitset<len> temp_b = b << (d1 - d2);
+    std::bitset<len> add_b = temp_b;
+
+    Integer<len>::to_additional_code(add_b);
+
+    std::bitset<len> mod = Integer<len>::sum_bitsets(a, add_b);
+
     std::bitset<len> ans;
+    bool mod_sign = mod.test(len - 1);
+    size_t ind = d1 - d2;
+    ans[ind--] = !mod_sign;
+    //std::cout << mod << std::endl;
+    //std::cout << "to ans written: " << !mod_sign << std::endl;
 
+    for (size_t i = 0; i < d1 - d2; ++i)
+    {
+        /*
+        if ((Integer<len>(mod) >= 0 && Integer<len>(mod) < Integer<len>(b)) || (Integer<len>(mod) < 0 && Integer<len>(mod) > -Integer<len>(b)))
+        {
+            std::cout << "broken" << std::endl;
+            std::cout << Integer<len>(mod) << " " << Integer<len>(b) << std::endl;
+            //ans >>= d1 - d2 - i;
+            break;
+        }
+        */
 
+        mod <<= 1;
+        mod[len - 1] = mod_sign;
 
+        if (mod.test(len - 1))
+            mod = Integer<len>::sum_bitsets(mod, temp_b);
+        else
+            mod = Integer<len>::sum_bitsets(mod, add_b);
+
+        //std::cout << mod << std::endl;
+
+        mod_sign = mod.test(len - 1);
+        ans[ind--] = !mod_sign;
+        //std::cout << ans << std::endl;
+        //std::cout << "to ans written: " << !mod_sign << std::endl;
+    }
+    //std::cout << ans << std::endl;
+    if (sign)
+        Integer<len>::to_additional_code(ans);
+    return ans;
+}
+
+template<size_t len>
+inline std::bitset<len> Integer<len>::mult_bitsets(const std::bitset<len> &b1, const std::bitset<len>& b2)
+{
+    std::bitset<len> a = b1, b = b2, ans;
+    bool sign = a.test(len - 1) ^ b.test(len - 1);
+
+    if (a.test(len - 1))
+        Integer<len>::to_additional_code(a);
+
+    if (b.test(len - 1))
+        Integer<len>::to_additional_code(b);
+
+    for (size_t i = 0; i < len - 1; ++i)
+        if (a.test(i))
+            ans = Integer<len>::sum_bitsets(ans, b << i);
+
+    if (sign)
+        Integer<len>::to_additional_code(ans);
+
+    return ans;
 }
 
 template<size_t len>
