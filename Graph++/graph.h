@@ -1,87 +1,161 @@
-#ifndef GRAPH_H_INCLUDED
-#define GRAPH_H_INCLUDED
+#ifndef GRAPH_H
+#define GRAPH_H
 
-#include "vertex.h"
+#include <vector>
+#include <map>
+#include <set>
 
-const size_t no_path = 4294967295;
-
-class Graph
+//node is a class/structure that contains info about the node
+//weight_type - any numeric type that can contain weight of an edge
+template <class node, typename weight_type = double>
+class graph
 {
 private:
-    std::vector<Vertex> vertexes;
-    std::vector<size_t> rast;
-    std::vector<bool> label;
-    bool dijkstra_counting = false;
-    void dijkstra(size_t v, size_t &vf);
-    bool is_oriented;
+    //first argument - node, second argument - nodes,
+    //that are connected to the .first with weight
+    std::map<node*, std::map<node*, weight_type>> nodes;
 public:
-    Graph::Graph(bool _is_oriented)
-    void add_vertex();
-    Vertex get_vertex_by_id(size_t _id);
-    void connect(size_t v1, size_t v2, size_t distance);
-    size_t distance(size_t v1, size_t v2);
+    const weight_type default_edge_weight;
+
+    //ctors
+    graph(weight_type default_edge_weight = 1): default_edge_weight(default_edge_weight){}
+
+    graph(const graph &g): default_edge_weight(g.default_edge_weight)
+    {
+        for (auto it = g.nodes.cbegin(); it != g.nodes.cend(); ++it)
+        {
+            std::map<node*, weight_type> connected;
+            for (auto it_n = it->second.cbegin(); it_n != it->second.cend(); ++it_n)
+                connected.emplace(new node *(it_n->first), it_n->second);
+            this->nodes.emplace(new node *(it->first), std::move(connected));
+        }
+    }
+
+    //methods to modify the graph
+
+    void add_node(node *n)
+    {
+        nodes.emplace(n, std::map<node*, int>());
+    }
+
+    //connects nodes with an oriented edge
+    bool connect(node *from, node *to)
+    {
+        auto f1 = nodes.find(from), f2 = nodes.find(to);
+        if (f1 != nodes.end() && f2 != nodes.end())
+        {
+            f1->second.insert_or_assign(to, this->default_edge_weight);
+            return true;
+        }
+        return false;
+    }
+
+    bool connect(node *from, node *to, weight_type weight)
+    {
+        auto f1 = nodes.find(from), f2 = nodes.find(to);
+        if (f1 != nodes.end() && f2 != nodes.end())
+        {
+            f1->second.insert_or_assign(to, weight);
+            return true;
+        }
+        return false;
+    }
+
+    //connects nodes with a non-oriented edge
+    bool connect_both(node *a, node *b)
+    {
+        auto f1 = nodes.find(a), f2 = nodes.find(b);
+        if (f1 != nodes.end() && f2 != nodes.end())
+        {
+            f1->second.insert_or_assign(b, default_edge_weight);
+            f2->second.insert_or_assign(a, default_edge_weight);
+            return true;
+        }
+        return false;
+    }
+
+    bool connect_both(node *a, node *b, weight_type weight)
+    {
+        auto f1 = nodes.find(a), f2 = nodes.find(b);
+        if (f1 != nodes.end() && f2 != nodes.end())
+        {
+            f1->second.insert_or_assign(b, weight);
+            f2->second.insert_or_assign(a, weight);
+            return true;
+        }
+        return false;
+    }
+
+    //disconnects two nodes
+    bool disconnect(node *a, node *b)
+    {
+        auto f1 = nodes.find(a), f2 = nodes.find(b);
+        if (f1 != nodes.end() && f2 != nodes.end())
+        {
+            f1->second.erase(b);
+            f2->second.erase(a);
+            return true;
+        }
+        return false;
+    }
+
+    //very slow function, need to think how to optimize node search
+    template <class compare>
+    node* find_if(compare comp)
+    {
+        for (auto it = nodes.cbegin(); it != nodes.cend(); ++it)
+            if (comp(*(it->first)))
+                return it->first;
+        return nullptr;
+    }
+
+    //same here
+    node* find(const node &n)
+    {
+        auto equals = [&n](const node &_n) {return !(_n < n) && !(n < _n);};
+        for (auto it = nodes.cbegin(); it != nodes.cend(); ++it)
+            if (equals(*(it->first)))
+                return it->first;
+        return nullptr;
+    }
+
+    weight_type min_distance(node *from, node *to)
+    {
+        if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end())
+            return -1;
+        std::map<node*, std::pair<weight_type, bool>> distances; //.first - total weight, .second - if the answer is found
+        node *current = from;
+        distances.emplace(from, std::make_pair(0, true));
+        while (current != to)
+        {
+            auto f = nodes.find(current);
+            auto f_d = distances.find(current);
+            f_d->second.second = true;
+            for (auto it = f->second.cbegin(); it != f->second.cend(); ++it)
+            {
+                auto f_it_first = distances.find(it->first);
+                if (f_it_first == distances.end())
+                    distances.emplace(it->first, std::make_pair(f_d->second.first + it->second, false));
+                else if (f_it_first->second.first > f_d->second.first + it->second)
+                    f_it_first->second.first = f_d->second.first + it->second;
+
+            }
+            weight_type min_w;
+            node *min_n = nullptr;
+            for (auto it = distances.begin(); it != distances.end(); ++it)
+            {
+                if (!it->second.second && (min_n == nullptr || it->second.first < min_w))
+                {
+                    min_n = it->first;
+                    min_w = it->second.first;
+                }
+            }
+            if (min_n == nullptr)
+                return -1;
+            current = min_n;
+        }
+        return distances[to].first;
+    }
 };
 
-Graph::Graph(bool _is_oriented)
-{
-    is_oriented = _is_oriented;
-}
-
-void Graph::add_vertex()
-{
-    Vertex v = Vertex(vertexes.size());
-    vertexes.push_back(v);
-}
-
-Vertex Graph::get_vertex_by_id(size_t _id)
-{
-    return vertexes[_id];
-}
-
-void Graph::connect(size_t v1, size_t v2, size_t distance)
-{
-    vertexes[v1].connect(&vertexes[v2], distance);
-    if (!is_oriented)
-        vertexes[v2].connect(&vertexes[v1], distance);
-}
-
-void Graph::dijkstra(size_t v, size_t &vf)
-{
-    if (!dijkstra_counting)
-    {
-        rast = std::vector<size_t> (vertexes.size(), UINT_MAX);
-        label = std::vector<bool> (vertexes.size(), false);
-        rast[v] = 0;
-        dijkstra_counting = true;
-    }
-
-    label[v] = true;
-
-    for (auto i: vertexes[v].adjacent)
-    {
-
-        if (!label[i.first->id] && rast[v] + i.second < rast[i.first->id])
-            rast[i.first->id] = rast[v] + i.second;
-    }
-
-    size_t _min = UINT_MAX; long long ind = -1;
-    for (size_t i = 0; i < rast.size(); ++i)
-        if (rast[i] < _min && !label[i])
-        {
-            _min = rast[i];
-            ind = i;
-        }
-
-    if (ind != -1 && ind != vf)
-        Graph::dijkstra(ind, vf);
-    else
-        dijkstra_counting = false;
-}
-
-size_t Graph::distance(size_t v1, size_t v2)
-{
-    dijkstra(v1, v2);
-    return ((rast[v2] == UINT_MAX) ? (no_path) : rast[v2]);
-}
-
-#endif // GRAPH_H_INCLUDED
+#endif // GRAPH_H
