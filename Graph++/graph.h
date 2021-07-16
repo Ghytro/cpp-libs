@@ -44,7 +44,7 @@ public:
         auto f1 = nodes.find(from), f2 = nodes.find(to);
         if (f1 != nodes.end() && f2 != nodes.end())
         {
-            f1->second.insert_or_assign(to, this->default_edge_weight);
+            f1->second[to]=  this->default_edge_weight;
             return true;
         }
         return false;
@@ -55,7 +55,7 @@ public:
         auto f1 = nodes.find(from), f2 = nodes.find(to);
         if (f1 != nodes.end() && f2 != nodes.end())
         {
-            f1->second.insert_or_assign(to, weight);
+            f1->second[to] = weight;
             return true;
         }
         return false;
@@ -67,8 +67,8 @@ public:
         auto f1 = nodes.find(a), f2 = nodes.find(b);
         if (f1 != nodes.end() && f2 != nodes.end())
         {
-            f1->second.insert_or_assign(b, default_edge_weight);
-            f2->second.insert_or_assign(a, default_edge_weight);
+            f1->second[b] = default_edge_weight;
+            f2->second[a] = default_edge_weight;
             return true;
         }
         return false;
@@ -79,8 +79,8 @@ public:
         auto f1 = nodes.find(a), f2 = nodes.find(b);
         if (f1 != nodes.end() && f2 != nodes.end())
         {
-            f1->second.insert_or_assign(b, weight);
-            f2->second.insert_or_assign(a, weight);
+            f1->second[b] = weight;
+            f2->second[a] = weight;
             return true;
         }
         return false;
