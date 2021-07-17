@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <stack>
 
 //node is a class/structure that contains info about the node
 //weight_type - any numeric type that can contain weight of an edge
@@ -155,6 +156,60 @@ public:
             current = min_n;
         }
         return distances[to].first;
+    }
+
+    template <class Iterator>
+    void min_path(node *from, node *to, Iterator d_first)
+    {
+        if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end())
+            return;
+        std::map<node*, std::pair<weight_type, bool>> distances; //.first - total weight, .second - if the answer is found
+        std::map<node*, node*> parents; //first - node; second - her parent
+        node *current = from;
+        distances.emplace(from, std::make_pair(0, true));
+        while (current != to)
+        {
+            auto f = nodes.find(current);
+            auto f_d = distances.find(current);
+            f_d->second.second = true;
+            for (auto it = f->second.cbegin(); it != f->second.cend(); ++it)
+            {
+                auto f_it_first = distances.find(it->first);
+                if (f_it_first == distances.end())
+                {
+                    distances.emplace(it->first, std::make_pair(f_d->second.first + it->second, false));
+                    parents[it->first] = current;
+                }
+                else if (f_it_first->second.first > f_d->second.first + it->second)
+                {
+                    f_it_first->second.first = f_d->second.first + it->second;
+                    parents[it->first] = current;
+                }
+            }
+            weight_type min_w;
+            node *min_n = nullptr;
+            for (auto it = distances.begin(); it != distances.end(); ++it)
+            {
+                if (!it->second.second && (min_n == nullptr || it->second.first < min_w))
+                {
+                    min_n = it->first;
+                    min_w = it->second.first;
+                }
+            }
+            if (min_n == nullptr)
+                return;
+            current = min_n;
+        }
+        std::stack<node*> s_path;
+        s_path.push(to);
+        while (s_path.top() != from)
+            s_path.push(parents[s_path.top()]);
+        Iterator it = d_first;
+        while (!s_path.empty())
+        {
+            *it++ = s_path.top();
+            s_path.pop();
+        }
     }
 };
 
