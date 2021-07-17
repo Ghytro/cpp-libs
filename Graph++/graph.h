@@ -211,6 +211,23 @@ public:
             s_path.pop();
         }
     }
+
+    template <class Iterator>
+    weight_type path_weight(Iterator first, Iterator last) //any container that contains nodes
+    {
+        weight_type total = 0;
+        for (Iterator it = first; it != last - 1; ++it)
+        {
+            auto f = nodes.find(*it);
+            if (f == nodes.end())
+                return -1;
+            auto f_next = f->second.find(*(it + 1));
+            if (f_next == f->second.end())
+                return -1;
+            total += f_next->second;
+        }
+        return total;
+    }
 };
 
 #endif // GRAPH_H
