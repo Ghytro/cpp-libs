@@ -4,7 +4,7 @@
 #include "graph.h"
 
 template<class node, typename weight_t = double>
-class edge_list_graph: public graph<node, weight_t>
+class edge_list_graph: virtual public graph<node, weight_t>
 {
 
 };

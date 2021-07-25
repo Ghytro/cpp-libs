@@ -3,6 +3,7 @@
 
 #include <list>
 #include <vector>
+#include <unordered_map>
 
 //base class, directed graph
 template<class node, typename weight_t = double>
@@ -20,6 +21,10 @@ public:
     //adds new node to graph
     //if the graph already contains this node does nothing
     virtual void add_node(node*) = 0;
+
+    //removes the node from the graph
+    //if the graph doesn't contain this node does nothing
+    virtual void remove_node(node*) = 0;
 
     //checks if the graph contains given node
     virtual bool contains(node*) = 0;
@@ -71,6 +76,20 @@ public:
     //using bfs, in case of undirected graph uses DSU
     //to speed up the operation to approximately time-constant
     virtual bool path_exists(node *from, node *to) = 0;
+};
+
+//exceptions
+
+//is thrown when node is not in graph
+struct node_not_found: public std::exception
+{
+    const char* what() const throw(){return "No such node in graph";}
+};
+
+//is thrown when there's no path between two given nodes
+struct path_not_found: public std::exception
+{
+    const char* what() const throw(){return "Path between two given nodes does not exist";}
 };
 
 #endif // GRAPH_H

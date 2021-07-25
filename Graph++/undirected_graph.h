@@ -6,7 +6,7 @@
 
 //base class for graphs that use different data structures, graph is undirected
 template<class node, typename weight_t = double>
-class undirected_graph: public graph<node, weight_t>
+class undirected_graph: virtual public graph<node, weight_t>
 {
 private:
     //everything in private is for DSU, which is not available for directed graphs
@@ -16,12 +16,14 @@ private:
 
     void __create_set(node *n)
     {
-        parent[n] = n;
-        rank[n] = 1;
+        parent.emplace(n, n);
+        rank.emplace(n, 1);
     }
 
     node* __get_set(node *n)
     {
+        if (parent.find(n) == parent.end())
+            throw node_not_found();
         if (parent[n] == n)
             return n;
         return parent[n] = __get_set(parent[n]);
@@ -55,14 +57,14 @@ public:
     //if the graph already contains this node does nothing
     void add_node(node *n) override
     {
-        if (parent.find(n) == parent.end())
-            __create_set(n);
+        __create_set(n);
     }
 
-    //checks if the graph contains given node
-    bool contains(node *n) override
+    //removes given node from graph
+    //if graph doesn't contain this node does nothing
+    void remove_node(node *n) override
     {
-        return parent.find(n) != parent.end();
+
     }
 
     //connects two nodes according to graph's orientation
@@ -72,11 +74,14 @@ public:
     //or reconnects two nodes with a new edge that has new weight
     bool connect(node *a, node *b) override
     {
-        auto f1 = parent.find(a), f2 = parent.find(b);
-        if (f1 == parent.end() || f2 == parent.end())
-            return false;
-        if (__get_set(a) != __get_set(b))
+        try
+        {
             __union_sets(a, b);
+        }
+        catch (const node_not_found&)
+        {
+            return false;
+        }
         return true;
     }
 
@@ -88,39 +93,18 @@ public:
     bool disconnect(node *a, node *b) override
     {
 
+        return true;
     }
 
-    //TODO: search for a way to optimize
-
-    //finds the pointer to object that points to the object that equals the argument
-    //if the objects in graph are not unique there's no guarantee the method will return
-    //the pointer you expected, use find_all instead to find all the occurrences
-    node* find(const node &n) override
+    bool path_exists(node *a, node *b) override
     {
-        for (auto it = parent.begin(); it != parent.end(); ++it)
-            if (*(it->first) == n)
-                return it->first;
-        return nullptr;
-    }
-
-    //finds all the pointers to objects that point to the objects that equal the argument
-    //writes all the found pointers to destination container (either vector or list)
-    //d_first is the iterator to beginning of the sequence
-    void find_all(const node &n, typename std::vector<node*>::iterator d_first) override
-    {
-        for (auto it = parent.begin(); it != parent.end(); ++it)
+        try
         {
-            if (*(it->first) == n)
-                *(d_first++) = it->first;
+            return __get_set(a) == __get_set(b);
         }
-    }
-
-    void find_all(const node &n, typename std::list<node*>::iterator d_first) override
-    {
-        for (auto it = parent.begin(); it != parent.end(); ++it)
+        catch (const node_not_found&)
         {
-            if (*(it->first) == n)
-                *(d_first++) = it->first;
+            return false;
         }
     }
 };
